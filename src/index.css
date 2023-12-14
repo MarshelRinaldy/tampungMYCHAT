@@ -69,3 +69,123 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+div {
+  margin: 10px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+label:first-of-type {
+  font-size: 18px;
+}
+
+label:nth-of-type(2) {
+  font-size: 16px;
+}
+
+input:not(:first-of-type) {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:not(:first-of-type) {
+  margin-top: 5px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+.poll-container {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.poll-subject {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.poll-options {
+  list-style: none;
+  padding: 0;
+}
+
+.poll-option {
+  margin-bottom: 10px;
+}
+
+.poll-radio {
+  margin-right: 5px;
+}
+
+.poll-label {
+  cursor: pointer;
+}
+
+.btn-primary {
+  margin-top: 10px;
+}
+
+/* Dalam file CSS Anda atau dalam komponen yang sama */
+.vote-results {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.vote-results h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.vote-results ul {
+  list-style: none;
+  padding: 0;
+}
+
+.vote-results li {
+  margin-bottom: 15px;
+}
+
+.vote-results p {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.voters-list {
+  font-size: 14px;
+}
+
+
+/* Responsive styles */
+@media (max-width: 600px) {
+  .poll-container {
+    padding: 8px;
+  }
+
+  .poll-subject {
+    font-size: 16px;
+  }
+
+  .poll-options {
+    margin-top: -10px;
+    /* Adjust spacing between options */
+  }
+}
