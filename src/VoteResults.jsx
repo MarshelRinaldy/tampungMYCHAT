@@ -5,13 +5,14 @@ const VoteResults = ({ options }) => {
         (sum, option) => sum + option.voters.length,
         0
     );
+    console.log(options);
     return (
         <div className="vote-results">
             <h3>Hasil Vote:</h3>
             <ul>
                 {Object.values(options).map((option, index) => (
                 <li key={index}>
-                    <p>{`${index + 1}. ${option.text} ( ${((option.voters.length / totalVotes) * 100)}% )`}</p>
+                    <p>{`${index + 1}. ${option.text} ( ${(option.voters.length !== 0 ? (option.voters.length / totalVotes) * 100 : 0)}% )`}</p>
                     {option.voters.length > 0 && (
                     <div className="voters-list">
                         {option.voters.map((voter, voterIndex) => (
