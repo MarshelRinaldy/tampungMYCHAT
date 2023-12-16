@@ -44,7 +44,7 @@ function App() {
   const [pollSubject, setPollSubject] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   
-  const [selectedPollOptions, setSelectedPollOptions] = useState({});
+  const [selectedPollOptions, setSelectedPollOptions] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [optionsPool, setOptionsPool] = useState([]);
   
@@ -80,7 +80,18 @@ function App() {
         setMessages([]);
       }
     });
+    
   }, []);
+
+  useEffect(() => {
+    const pollMsg = messages.find(message => message.data.text === 'Polling');
+    if(pollMsg) {
+      const userVotedOptions = Object.values(pollMsg.data.options || {});
+      const foundOption = userVotedOptions.find(option => (option.voters || []).includes(user.displayName));
+      const foundOptionId = foundOption ? foundOption.id : null;
+      setSelectedPollOptions(foundOptionId);
+    }
+  },[]);
 
   const sendMessage = async () => {
     await addDoc(collection(db, 'messages'), {
@@ -136,8 +147,6 @@ function App() {
   };
 
   const handlePollSubmit = async () => {
-    console.log('Subject:', pollSubject);
-    console.log('Options:', pollOptions);
     try {
       const pollRef = await addDoc(collection(db, 'messages'), {
         uid: user.uid, 
@@ -160,7 +169,6 @@ function App() {
       });
       setPollSubject('');
       setPollOptions(['', '']);
-      console.log('Poll added with ID:', pollRef.id);
       closeModal();
     } catch (error) {
       console.error('Error adding poll:', error);
@@ -180,59 +188,42 @@ function App() {
 
  const handlePollOptionClick = async (messageId, optionId) => {
   if (selectedMessage === null) {
-    console.log(`Option ${optionId} of message ${messageId} clicked!`);
     try {
       const messageToUpdate = messages.find((msg) => msg.id === messageId);
       const userVotedOption = messageToUpdate.data.options?.[optionId]?.voters || [];
+      const userVotedOptions = Object.values(messageToUpdate.data.options || {}).map(option => option.voters || []).flat();
+      
+      if(userVotedOptions.includes(user.displayName)) {
+        const userVotedOptions2 = Object.values(messageToUpdate.data.options || {});
+        const foundOption = userVotedOptions2.find(option => (option.voters || []).includes(user.displayName));
+        const foundOptionId = foundOption ? foundOption.id : null;
+        setSelectedPollOptions(foundOptionId);
 
-      if (userVotedOption.includes(user.displayName)) {
-        const updatedVoters = userVotedOption.filter((voter) => voter !== user.displayName);
-
-        await updateDoc(doc(db, 'messages', messageId), {
-          selectedOption: null,
-          [`options.${optionId}.voters`]: updatedVoters,
-        });
-        
-        showVoteResults(messageId);
-        setSelectedPollOptions((prevOptions) => {
-          const newOptions = { ...prevOptions };
-          delete newOptions[messageId];
-          return newOptions;
-        });
-      } else {
-        const prevOptionId = selectedPollOptions[messageId];
-        if (prevOptionId) {
-          const prevOptionVoters = messageToUpdate.data.options?.[prevOptionId]?.voters || [];
-          const updatedPrevOptionVoters = prevOptionVoters.filter((voter) => voter !== user.displayName);
-          
+        const userVotedOptionDel = messageToUpdate.data.options[foundOptionId].voters || [];
+        const updatedVoters = userVotedOptionDel.filter((voter) => voter !== user.displayName);
+        if(selectedPollOptions !== optionId){
           await updateDoc(doc(db, 'messages', messageId), {
-            [`options.${prevOptionId}.voters`]: updatedPrevOptionVoters,
-          });
-
-          setSelectedPollOptions((prevOptions) => {
-            const newOptions = { ...prevOptions };
-            delete newOptions[messageId];
-            return newOptions;
+            [`options.${foundOptionId}.voters`]: updatedVoters,
           });
         }
+      } else {
+        if (selectedPollOptions !== optionId) {
+          await updateDoc(doc(db, 'messages', messageId), {
+            [`options.${optionId}.voters`]: [...userVotedOption, user.displayName],
+          });
 
-        await updateDoc(doc(db, 'messages', messageId), {
-          selectedOption: optionId,
-          [`options.${optionId}.voters`]: [...userVotedOption, user.displayName],
-        });
-        showVoteResults(messageId);
-        setSelectedPollOptions((prevOptions) => ({
-          ...prevOptions,
-          [messageId]: optionId,
-        }));
+          setSelectedPollOptions(optionId);
+
+          showVoteResults(messageId);
+        }
       }
     } catch (error) {
       console.error('Error updating selected option: ', error);
     }
   }
 };
+
 const showVoteResults = async(messageId) => {
-    console.log('Show vote results for message:', messageId);
     try {
       const pollSnapshot = await getDoc(doc(db, 'messages', messageId));
       const pollData = pollSnapshot.data();
@@ -242,7 +233,7 @@ const showVoteResults = async(messageId) => {
       console.error('Error fetching poll data:', error);
     }
   };
-
+  console.log(messages);
   return (
     
     <div className="container py-5" style={{ backgroundImage: 'url(/img/bg.jpg)', backgroundSize: 'cover', width: '1000px' }}>
@@ -322,20 +313,18 @@ const showVoteResults = async(messageId) => {
                           <p className="poll-subject">{msg.data.subject}</p>
                           <ul className="poll-options">
                             {Object.values(msg.data.options).map((option) => (
-                              <li 
-                                key={option.id} 
-                                className="poll-option"
-                              >
-                                <input 
-                                  type="radio" 
-                                  className="poll-radio" 
-                                  id={`option-${option.id}`} 
+                              <li key={option.id} className="poll-option">
+                                <input
+                                  type="radio"
+                                  className="poll-radio"
+                                  id={`option-${option.id}`}
                                   name={`poll-options-${msg.id}`}
+                                  checked={selectedPollOptions === option.id}
                                   onClick={() => handlePollOptionClick(msg.id, option.id)}
-                                  checked={selectedPollOptions[msg.id] === option.id}
                                 />
-                                <label className="poll-label" htmlFor={`option-${option.id}`}>{option.text}</label>
-                                
+                                <label className="poll-label" htmlFor={`option-${option.id}`}>
+                                  {option.text}
+                                </label>
                               </li>
                             ))}
                           </ul>
