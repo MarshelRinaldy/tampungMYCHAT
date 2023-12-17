@@ -199,6 +199,7 @@ function App() {
           delete newOptions[messageId];
           return newOptions;
         });
+        
       } else {
         const prevOptionId = selectedPollOptions[messageId];
         if (prevOptionId) {
